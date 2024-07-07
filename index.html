@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IndexedDB Playground</title>
+  </head>
+  <body>
+    <h1>IndexedDB Playground</h1>
+    <div style="margin-bottom: 10px">
+      <button type="button" onclick="indexeddb_create();">
+        Create IndexedDB
+      </button>
+    </div>
+    <div style="margin-bottom: 10px">
+      <button type="button" onclick="indexeddb_object_store_create();">
+        Create Object Store in IndexedDB
+      </button>
+    </div>
+    <div style="margin-bottom: 10px">
+      <button type="button" onclick="indexeddb_insert_data();">
+        Insert Data into IndexedDB
+      </button>
+    </div>
+    <div style="margin-bottom: 10px">
+      <button type="button" onclick="indexeddb_select_data();">
+        Search Data in IndexedDB
+      </button>
+    </div>
+    <div style="margin-bottom: 10px">
+      <button type="button" onclick="indexeddb_update_data();">
+        Update Data in IndexedDB
+      </button>
+    </div>
+    <div style="margin-bottom: 10px">
+      <button type="button" onclick="indexeddb_select_data();">
+        Search Data in IndexedDB
+      </button>
+    </div>
+    <div style="margin-bottom: 10px">
+      <button type="button" onclick="indexeddb_delete_data();">
+        Delete Data from IndexedDB
+      </button>
+    </div>
+    <div style="margin-bottom: 10px">
+      <button type="button" onclick="indexeddb_select_data();">
+        Search Data in IndexedDB
+      </button>
+    </div>
+    <div style="margin-bottom: 10px">
+      <button type="button" onclick="indexeddb_object_store_delete();">
+        Delete Object Store from IndexedDB
+      </button>
+    </div>
+    <div style="margin-bottom: 10px">
+      <button type="button" onclick="indexeddb_delete();">
+        Delete IndexedDB
+      </button>
+    </div>
+    <hr />
+    <p>Execution Result</p>
+    <p id="success"></p>
+    <hr />
+    <p style="color: #ff0000">If an error occurs</p>
+    <p id="error"></p>
+    <script>
+      const db_name = "MyTestDatabase";
+      const db_base_version = 1;
+      const db_object_store_create_version = 2;
+      const db_object_store_delete_version = 3;
+      const store_name = "customer";
+      const err = document.getElementById("error");
+      const success = document.getElementById("success");
+      const default_data = { id: "#12345#user_id", name: "test sid" };
+
+      // Create IndexedDB
+      function indexeddb_create() {
+        const createRequest = window.indexedDB.open(db_name, db_base_version);
+
+        createRequest.onerror = (event) => {
+          err.innerHTML = event.target.error;
+        };
+        createRequest.onsuccess = (event) => {
+          db = event.target.result;
+          success.innerHTML = `Created ${db_name}. Version created = ${event.target.result.version}`;
+          // Close connection
+          db.close();
+        };
+      }
+
+      // Create Object Store
+      function indexeddb_object_store_create() {
+        const openRequest = window.indexedDB.open(
+          db_name,
+          db_object_store_create_version
+        );
+
+        openRequest.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          // Create an objectStore to hold customer information
+          const objectStore = db.createObjectStore(store_name, {
+            keyPath: "id",
+          });
+          success.innerHTML = `Created ${store_name} in ${db_name}.`;
+          // Close connection
+          db.close();
+        };
+      }
+
+      // Insert Data
+      function indexeddb_insert_data() {
+        const openRequest = window.indexedDB.open(db_name);
+
+        openRequest.onerror = (event) => {
+          console.log("error");
+          err.innerHTML = event.target.error;
+        };
+        openRequest.onsuccess = (event) => {
+          const db = event.target.result;
+          const customerObjectStore = db
+            .transaction(store_name, "readwrite")
+            .objectStore(store_name);
+          customerObjectStore.add(default_data);
+          success.innerHTML = `Added ${default_data.id} to ${store_name} in ${db_name}.`;
+          // Close connection
+          db.close();
+        };
+      }
+
+      // Update Data
+      function indexeddb_update_data() {
+        const openRequest = window.indexedDB.open(db_name);
+
+        openRequest.onerror = (event) => {
+          console.log("error");
+          err.innerHTML = event.target.error;
+        };
+        openRequest.onsuccess = (event) => {
+          default_data.name = "test sid";
+          const db = event.target.result;
+          const customerObjectStore = db
+            .transaction(store_name, "readwrite")
+            .objectStore(store_name);
+          customerObjectStore.put(default_data);
+          success.innerHTML = `Updated ${default_data.id} in ${store_name} of ${db_name}.`;
+          // Close connection
+          db.close();
+        };
+      }
+
+      // Delete Data
+      function indexeddb_delete_data() {
+        const openRequest = window.indexedDB.open(db_name);
+
+        openRequest.onerror = (event) => {
+          console.log("error");
+          err.innerHTML = event.target.error;
+        };
+        openRequest.onsuccess = (event) => {
+          const db = event.target.result;
+          const customerObjectStore = db
+            .transaction(store_name, "readwrite")
+            .objectStore(store_name);
+          customerObjectStore.delete(default_data.id);
+          success.innerHTML = `Deleted ${default_data.id} from ${store_name} in ${db_name}.`;
+          // Close connection
+          db.close();
+        };
+      }
+
+      // Select Data
+      function indexeddb_select_data() {
+        const openRequest = window.indexedDB.open(db_name);
+
+        openRequest.onerror = (event) => {
+          console.log("error");
+          err.innerHTML = event.target.error;
+        };
+        openRequest.onsuccess = (event) => {
+          const db = event.target.result;
+          const customerObjectStore = db
+            .transaction(store_name)
+            .objectStore(store_name);
+          const get_result = customerObjectStore.get(default_data.id);
+
+          get_result.onerror = (event) => {
+            err.innerHTML = event.target.error;
+          };
+          get_result.onsuccess = (event) => {
+            if (typeof get_result.result === "undefined") {
+              success.innerHTML = `Could not retrieve data from ${store_name} in ${db_name}`;
+            } else {
+              success.innerHTML = `Found id:${get_result.result.id}, name:${get_result.result.name} in ${store_name} of ${db_name}.`;
+            }
+          };
+          // Close connection
+          db.close();
+        };
+      }
+
+      // Delete Object Store
+      function indexeddb_object_store_delete() {
+        const openRequest = window.indexedDB.open(
+          db_name,
+          db_object_store_delete_version
+        );
+
+        openRequest.onerror = (event) => {
+          console.log("error");
+          err.innerHTML = event.target.error;
+        };
+        openRequest.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          // Delete the objectStore
+          const objectStoreDelete = db.deleteObjectStore(store_name);
+          success.innerHTML = `Deleted ${store_name} from ${db_name}.`;
+        };
+      }
+
+      // Delete IndexedDB
+      function indexeddb_delete() {
+        const createRequest = window.indexedDB.deleteDatabase(db_name);
+        success.innerHTML = `Deleted ${db_name}.`;
+      }
+    </script>
+  </body>
+</html>
